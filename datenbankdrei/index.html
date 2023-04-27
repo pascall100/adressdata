@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Local Storage Database Example</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Local Storage Database Example</h1>
+  <!--suchfeld-->
+  <input type="text" id="searchInput" placeholder="Suche...">
+<!-- Daten löschen Botton-->
+<button type="button" id="deleteButton">Daten löschen</button>
+<!--Daten sichern - Botton -->
+<button type="button" id="exportButton">Sichern</button>
+
+
+
+
+  <form>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name">
+
+    <label for="email">E-Mail:</label>
+    <input type="email" id="email" name="email">
+
+    <label for="phone">Telefonnummer:</label>
+    <input type="tel" id="phone" name="phone">
+
+    <button type="button" id="saveButton">Save</button>
+  </form>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>E-Mail</th>
+        <th>Telefonnummer</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <script>
+  // Datenbank im Local Storage ablegen
+  function saveToLocalStorage() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+  
+    let data = {
+      name: name,
+      email: email,
+      phone: phone
+    };
+  
+    if (localStorage.getItem("data") == null) {
+      localStorage.setItem("data", "[]");
+    }
+  
+    let oldData = JSON.parse(localStorage.getItem("data"));
+    oldData.push(data);
+  
+    localStorage.setItem("data", JSON.stringify(oldData));
+  
+    alert("Daten erfolgreich gespeichert!");
+  }
+  
+  // Tabelle aus dem Local Storage laden
+  function loadFromLocalStorage() {
+    let data = JSON.parse(localStorage.getItem("data"));
+  
+    for (let i = 0; i < data.length; i++) {
+      let table = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+      let newRow = table.insertRow(table.length);
+  
+      let nameCell = newRow.insertCell(0);
+      nameCell.innerHTML = data[i].name;
+  
+      let emailCell = newRow.insertCell(1);
+      emailCell.innerHTML = data[i].email;
+  
+      let phoneCell = newRow.insertCell(2);
+      phoneCell.innerHTML = data[i].phone;
+
+// neu hinzugefügt
+let deleteButtonCell = newRow.insertCell(3);
+    let deleteButton = document.createElement("button");
+    deleteButton.setAttribute("data-id", data[i].id); // ID als Attribut hinzufügen
+    deleteButton.innerHTML = "Löschen";
+    deleteButton.addEventListener("click", function() {
+      if (confirm("Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?")) {
+        let id = this.getAttribute("data-id");
+        let oldData = JSON.parse(localStorage.getItem("data"));
+        oldData = oldData.filter(function(item) {
+          return item.id !== id;
+        });
+        localStorage.setItem("data", JSON.stringify(oldData));
+        loadFromLocalStorage();
+      }
+    });
+    deleteButtonCell.appendChild(deleteButton);
+  }
+}
+
+
+
+
+
+
+ 
+  
+  // Beim Laden der Seite Daten aus dem Local Storage in die Tabelle laden
+  window.onload = function() {
+    loadFromLocalStorage();
+  };
+  
+  // Click-Event für den Save-Button
+  document.getElementById("saveButton").addEventListener("click", saveToLocalStorage);
+  
+// Suchfeld anzeigen
+function searchTable() {
+  let input = document.getElementById("searchInput");
+  let filter = input.value.toUpperCase();
+  let table = document.getElementById("dataTable");
+  let rows = table.getElementsByTagName("tr");
+
+  for (let i = 0; i < rows.length; i++) {
+    let name = rows[i].getElementsByTagName("td")[0];
+    let email = rows[i].getElementsByTagName("td")[1];
+    let phone = rows[i].getElementsByTagName("td")[2];
+
+    if (name || email || phone) {
+      let nameText = name.textContent || name.innerText;
+      let emailText = email.textContent || email.innerText;
+      let phoneText = phone.textContent || phone.innerText;
+
+      if (nameText.toUpperCase().indexOf(filter) > -1 || emailText.toUpperCase().indexOf(filter) > -1 || phoneText.toUpperCase().indexOf(filter) > -1) {
+        rows[i].style.display = "";
+      } else {
+        rows[i].style.display = "none";
+      }
+    }
+  }
+}
+document.getElementById("searchInput").addEventListener("keyup", searchTable);
+//Daten löschen
+
+document.getElementById("deleteButton").addEventListener("click", function() {
+  if (confirm("Sind Sie sicher, dass Sie alle Daten löschen möchten?")) {
+    localStorage.clear();
+    document.getElementById("dataTable").getElementsByTagName("tbody")[0].innerHTML = "";
+    alert("Daten erfolgreich gelöscht!");
+  }
+});
+
+//Daten sichern
+document.getElementById("exportButton").addEventListener("click", function() {
+  let data = JSON.parse(localStorage.getItem("data"));
+  let csv = "Name,E-Mail,Telefonnummer\n";
+  for (let i = 0; i < data.length; i++) {
+    csv += `${data[i].name},${data[i].email},${data[i].phone}\n`;
+  }
+  // CSV-Datei herunterladen
+  let link = document.createElement("a");
+  link.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+  link.target = "_blank";
+  link.download = "data.csv";
+  link.click();
+  // PDF-Datei herunterladen
+  // ...
+});
+
+
+
+
+</script>
+
+</body>
+</html>
